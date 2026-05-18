@@ -411,14 +411,12 @@ class ReciteApp(App[str | None]):
         base = self.rate or 180
         base = max(120, min(320, base + delta))
         self.rate = base
-        self._refresh_subtitle()
         self._set_notice(f"rate → {base} wpm")
         await self._resynth_from_next()
 
     async def action_cycle_voice(self) -> None:
         self.voice_idx = (self.voice_idx + 1) % len(self.voices)
         self.voice = self.voices[self.voice_idx]
-        self._refresh_subtitle()
         self._set_notice(f"voice → {self.voice}")
         await self._resynth_from_next()
 
@@ -427,7 +425,13 @@ class ReciteApp(App[str | None]):
 
         The current sentence keeps playing with its existing audio; interrupting
         mid-word would be jarring. New voice/rate applies from cur+1 onward.
+
+        Also refreshes the subtitle here: the subtitle reflects current
+        voice/rate/aligner, and every path that mutates those calls into this
+        method. Keeping the refresh local removes the need for callers to
+        remember to do it themselves.
         """
+        self._refresh_subtitle()
         if not self.synth:
             return
         from_idx = self.current_idx + 1
