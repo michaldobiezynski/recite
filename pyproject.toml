@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "recite"
+version = "0.1.0"
+description = "A TUI text-to-speech player for macOS, built on say and afplay, with word-level highlighting."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Michael" }]
+dependencies = [
+    "textual>=0.80",
+    "rich>=13.7",
+]
+
+[project.optional-dependencies]
+# Forced alignment for karaoke-grade accuracy. Requires system espeak + ffmpeg.
+# Install with: pipx install 'recite[align]'  (after `brew install espeak ffmpeg`)
+align = [
+    "aeneas>=1.7.3",
+    "numpy<2.0",
+]
+dev = [
+    "ruff>=0.5",
+    "pytest>=8",
+]
+
+[project.scripts]
+recite = "recite.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["recite"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
