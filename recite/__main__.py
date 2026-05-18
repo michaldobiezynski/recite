@@ -38,7 +38,8 @@ def main() -> int:
         default="heuristic",
         help=(
             "word-timing aligner. 'heuristic' is instant and dep-free. "
-            "'aeneas' is more accurate but requires `pipx install recite[align]` "
+            "'aeneas' is more accurate but requires "
+            "`pipx install 'git+https://github.com/michaldobiezynski/recite.git[align]'` "
             "and `brew install espeak ffmpeg`."
         ),
     )
