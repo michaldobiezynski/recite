@@ -20,7 +20,7 @@ import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .aligners import Aligner, WordTiming
+from .aligners import Aligner, WordTiming, audio_duration_seconds
 
 
 @dataclass
@@ -33,6 +33,7 @@ class Track:
     timings: list[WordTiming] = field(default_factory=list)
     error: Exception | None = None
     ready: bool = False
+    duration_s: float = 0.0
 
 
 class Synth:
@@ -143,6 +144,7 @@ class Synth:
             raise RuntimeError(f"say produced no audio for sentence {track.index}")
 
         track.audio_path = audio_path
+        track.duration_s = audio_duration_seconds(audio_path)
         track.timings = await self.aligner.align(track.sentence, audio_path)
 
     def _run_say_blocking(self, args: list[str]) -> None:
