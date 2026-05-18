@@ -37,16 +37,17 @@ class TestSplitSentences:
         assert result == ["Mr. Smith arrived.", "He greeted us."]
 
     def test_does_not_split_on_etc(self):
-        # The abbreviation 'etc' is preserved within the sentence
-        # boundary check.
-        result = split_sentences("Cats, dogs, etc. They are pets.")
-        assert "Cats, dogs, etc. They are pets." in result
+        assert split_sentences("Cats, dogs, etc. They are pets.") == [
+            "Cats, dogs, etc. They are pets.",
+        ]
 
     def test_does_not_split_on_ie(self):
-        result = split_sentences(
+        assert split_sentences(
             "Some animals, i.e. cats, are nocturnal. They hunt at night."
-        )
-        assert "Some animals, i.e. cats, are nocturnal." in result
+        ) == [
+            "Some animals, i.e. cats, are nocturnal.",
+            "They hunt at night.",
+        ]
 
     def test_paragraph_breaks_create_boundaries(self):
         assert split_sentences("First line\nSecond line") == [

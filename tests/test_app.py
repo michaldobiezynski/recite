@@ -1,11 +1,9 @@
 """Pilot-based behavioural tests for the main player App's bindings.
 
-These exercise the *binding wiring* — that the right action runs for the
-right key — not the audio pipeline. Audio synthesis requires `say` which
-is macOS-only and slow, so it's left to integration testing.
+These exercise the binding wiring (that the right action runs for the right
+key), not the audio pipeline. Audio synthesis requires `say`, which is
+macOS-only and slow, so it is left to integration testing.
 """
-
-import pytest
 
 from recite.app import HelpScreen, ReciteApp
 
@@ -19,46 +17,33 @@ def _make_app() -> ReciteApp:
     )
 
 
-@pytest.mark.asyncio
-async def test_q_quits_with_none():
+async def test_q_quits_with_none(wait_for_exit):
     app = _make_app()
     async with app.run_test() as pilot:
         await pilot.pause()
         await pilot.press("q")
-        for _ in range(30):
-            await pilot.pause()
-            if not app.is_running:
-                break
+        await wait_for_exit(app, pilot)
     assert app.return_value is None
 
 
-@pytest.mark.asyncio
-async def test_escape_quits_with_none():
+async def test_escape_quits_with_none(wait_for_exit):
     app = _make_app()
     async with app.run_test() as pilot:
         await pilot.pause()
         await pilot.press("escape")
-        for _ in range(30):
-            await pilot.pause()
-            if not app.is_running:
-                break
+        await wait_for_exit(app, pilot)
     assert app.return_value is None
 
 
-@pytest.mark.asyncio
-async def test_ctrl_n_exits_with_paste_sentinel():
+async def test_ctrl_n_exits_with_paste_sentinel(wait_for_exit):
     app = _make_app()
     async with app.run_test() as pilot:
         await pilot.pause()
         await pilot.press("ctrl+n")
-        for _ in range(30):
-            await pilot.pause()
-            if not app.is_running:
-                break
+        await wait_for_exit(app, pilot)
     assert app.return_value == "paste"
 
 
-@pytest.mark.asyncio
 async def test_question_mark_toggles_help_modal():
     app = _make_app()
     async with app.run_test() as pilot:
@@ -74,7 +59,6 @@ async def test_question_mark_toggles_help_modal():
         assert not isinstance(app.screen, HelpScreen)
 
 
-@pytest.mark.asyncio
 async def test_help_modal_does_not_stack_on_repeated_open():
     # Regression test for the App-level priority binding gotcha that pushed
     # a fresh HelpScreen on every `?` instead of dismissing the existing one.
@@ -84,18 +68,25 @@ async def test_help_modal_does_not_stack_on_repeated_open():
         for _ in range(4):
             await pilot.press("question_mark")
             await pilot.pause()
-        # Four presses -> open, close, open, close.
+        # Four presses: open, close, open, close.
         assert not isinstance(app.screen, HelpScreen)
 
 
 class TestFooterBindings:
-    """Cosmetic invariants we want to lock in to keep the footer slim on
-    narrow terminals. If you add a binding, decide explicitly whether it's
-    visible or hidden — don't accidentally bloat the footer."""
+    """Cosmetic invariants that keep the footer slim on narrow terminals."""
 
-    def test_six_bindings_visible_in_footer(self):
-        visible = [b for b in ReciteApp.BINDINGS if b.show]
-        assert len(visible) == 6
+    def test_visible_footer_actions_are_locked(self):
+        # Naming the actions (not just the count) so a regression diff shows
+        # which binding became visible or hidden.
+        visible = [b.action for b in ReciteApp.BINDINGS if b.show]
+        assert visible == [
+            "play_pause",
+            "next",
+            "prev",
+            "new_text",
+            "show_help",
+            "quit",
+        ]
 
     def test_quit_binding_is_priority(self):
         quit_bindings = [b for b in ReciteApp.BINDINGS if "quit" in b.action]

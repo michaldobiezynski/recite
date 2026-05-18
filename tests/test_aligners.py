@@ -1,7 +1,7 @@
 """Unit tests for the pure-logic parts of the aligners module.
 
-We do not test full alignment end-to-end here — that requires a real audio
-file synthesised by `say` and is better covered by integration tests.
+Full alignment end-to-end requires a real audio file synthesised by `say`,
+so it is left to integration testing.
 """
 
 from unittest.mock import MagicMock, patch
@@ -20,7 +20,7 @@ class TestHeuristicAlignerWeight:
         assert HeuristicAligner._weight("hello", 0, 5) == 5.0
 
     def test_trailing_comma_adds_one_point_five(self):
-        # Sentence: "hello," — word is "hello" (0..5), trailing char is ','.
+        # Sentence: "hello,"; word is "hello" (0..5), trailing char is ','.
         assert HeuristicAligner._weight("hello,", 0, 5) == 5.0 + 1.5
 
     def test_trailing_semicolon_adds_one_point_five(self):
@@ -59,7 +59,7 @@ class TestAudioDurationSeconds:
             )
         )
         with patch("recite.aligners.subprocess.run", return_value=fake):
-            assert audio_duration_seconds("dummy.aiff") == 1.234567
+            assert audio_duration_seconds("dummy.aiff") == pytest.approx(1.234567)
 
     def test_returns_zero_when_no_duration_in_output(self):
         fake = MagicMock(stdout="some unrelated output\n")

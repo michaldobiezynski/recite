@@ -6,9 +6,19 @@ on:
   pull_request:
     branches: [master]
 
-# Run on macOS only — the runtime shells out to `say`, `afplay`, and `afinfo`,
-# which exist only on macOS. Tests that don't touch audio still benefit from
-# the same matrix because importing the app pulls in audio-adjacent code.
+# Tighten the default GITHUB_TOKEN scope; nothing here needs write access.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref so a flurry of pushes during PR
+# review does not waste macOS billable minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Run on macOS only because the runtime shells out to `say`, `afplay`, and
+# `afinfo`, which exist only on macOS. Pure-Python tests would run on Linux,
+# but importing the app pulls in audio-adjacent code, so we keep one matrix.
 jobs:
   test:
     runs-on: macos-latest
@@ -18,12 +28,14 @@ jobs:
         python: ["3.10", "3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
 
       - name: Install
         run: |
