@@ -38,7 +38,8 @@ def main() -> int:
         default="heuristic",
         help=(
             "word-timing aligner. 'heuristic' is instant and dep-free. "
-            "'aeneas' is more accurate but requires `pipx install recite[align]` "
+            "'aeneas' is more accurate but requires "
+            "`pipx install 'git+https://github.com/michaldobiezynski/recite.git[align]'` "
             "and `brew install espeak ffmpeg`."
         ),
     )
@@ -50,13 +51,13 @@ def main() -> int:
     args = parser.parse_args()
 
     if not shutil.which("say"):
-        sys.stderr.write("recite: `say` not found on PATH — macOS is required.\n")
+        sys.stderr.write("recite: `say` not found on PATH; macOS is required.\n")
         return 1
     if not shutil.which("afplay"):
-        sys.stderr.write("recite: `afplay` not found on PATH — macOS is required.\n")
+        sys.stderr.write("recite: `afplay` not found on PATH; macOS is required.\n")
         return 1
     if not shutil.which("afinfo"):
-        sys.stderr.write("recite: `afinfo` not found on PATH — macOS is required.\n")
+        sys.stderr.write("recite: `afinfo` not found on PATH; macOS is required.\n")
         return 1
 
     text = "" if args.paste else _load_input(args.file)

@@ -20,7 +20,7 @@ import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .aligners import Aligner, WordTiming
+from .aligners import Aligner, WordTiming, audio_duration_seconds
 
 
 @dataclass
@@ -33,6 +33,7 @@ class Track:
     timings: list[WordTiming] = field(default_factory=list)
     error: Exception | None = None
     ready: bool = False
+    duration_s: float = 0.0
 
 
 class Synth:
@@ -61,7 +62,7 @@ class Synth:
         self._cancelled = False
         # Handle to the currently-running `say` subprocess so cancel() can kill
         # it. Shared between the worker thread and the event loop; guard with
-        # a threading.Lock (not asyncio.Lock — the worker can't await).
+        # a threading.Lock (not asyncio.Lock; the worker can't await).
         self._current_proc: subprocess.Popen[bytes] | None = None
         self._proc_lock = threading.Lock()
 
@@ -73,6 +74,17 @@ class Synth:
         if 0 <= idx < len(self._tracks):
             return self._tracks[idx]
         return None
+
+    def progress(self) -> tuple[int, int]:
+        """Return `(synthesised, pending)` track counts for status display.
+
+        Pure read of `track.ready` flags; safe to call from the event loop
+        while the background `_run` task flips flags. CPython makes bool
+        attribute writes atomic, so worst case is a single refresh seeing a
+        flag that flipped a microsecond ago."""
+        synthesised = sum(1 for t in self._tracks if t.ready)
+        pending = len(self._tracks) - synthesised
+        return synthesised, pending
 
     def start(self, from_idx: int = 0) -> None:
         if self._task and not self._task.done():
@@ -143,6 +155,7 @@ class Synth:
             raise RuntimeError(f"say produced no audio for sentence {track.index}")
 
         track.audio_path = audio_path
+        track.duration_s = audio_duration_seconds(audio_path)
         track.timings = await self.aligner.align(track.sentence, audio_path)
 
     def _run_say_blocking(self, args: list[str]) -> None:

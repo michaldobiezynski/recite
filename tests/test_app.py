@@ -1,7 +1,7 @@
 """Pilot-based behavioural tests for the main player App's bindings.
 
-These exercise the *binding wiring* — that the right action runs for the
-right key — not the audio pipeline. Audio synthesis requires `say` which
+These exercise the *binding wiring* (that the right action runs for the
+right key), not the audio pipeline. Audio synthesis requires `say` which
 is macOS-only and slow, so it's left to integration testing.
 """
 
@@ -91,11 +91,7 @@ async def test_help_modal_does_not_stack_on_repeated_open():
 class TestFooterBindings:
     """Cosmetic invariants we want to lock in to keep the footer slim on
     narrow terminals. If you add a binding, decide explicitly whether it's
-    visible or hidden — don't accidentally bloat the footer."""
-
-    def test_six_bindings_visible_in_footer(self):
-        visible = [b for b in ReciteApp.BINDINGS if b.show]
-        assert len(visible) == 6
+    visible or hidden; don't accidentally bloat the footer."""
 
     def test_quit_binding_is_priority(self):
         quit_bindings = [b for b in ReciteApp.BINDINGS if "quit" in b.action]

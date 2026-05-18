@@ -104,7 +104,7 @@ class HeuristicAligner:
     @staticmethod
     def _weight(sentence: str, start: int, end: int) -> float:
         weight = float(end - start)
-        # Bonus for trailing punctuation — natural pauses extend the perceived
+        # Bonus for trailing punctuation: natural pauses extend the perceived
         # word duration in continuous speech.
         if end < len(sentence):
             after = sentence[end]
@@ -121,7 +121,7 @@ class AeneasAligner:
     """Forced alignment via the `aeneas` package.
 
     Requires the `align` optional dependency to be installed:
-        pipx install 'recite[align]'
+        pipx install 'git+https://github.com/michaldobiezynski/recite.git[align]'
     plus system tools:
         brew install espeak ffmpeg
     """
@@ -133,7 +133,8 @@ class AeneasAligner:
             from aeneas.task import Task  # noqa: F401
         except ImportError as exc:
             raise RuntimeError(
-                "aeneas is not installed. Install with: pipx install 'recite[align]' "
+                "aeneas is not installed. Install with: "
+                "pipx install 'git+https://github.com/michaldobiezynski/recite.git[align]' "
                 "after `brew install espeak ffmpeg`."
             ) from exc
 

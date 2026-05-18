@@ -20,6 +20,12 @@ from .synth import Synth, available_voices
 from .widgets import SentenceState, SentenceWidget
 
 
+def _fmt_mmss(seconds: float) -> str:
+    """Format seconds as zero-padded `MM:SS`. Matches the site's clock format."""
+    total = max(0, int(seconds))
+    return f"{total // 60:02d}:{total % 60:02d}"
+
+
 class HelpScreen(ModalScreen[None]):
     """Modal overlay listing all keys. Opened by `?`, dismissed by Esc/?/q.
     Lets the main footer stay terse so it doesn't truncate on narrow windows."""
@@ -40,7 +46,7 @@ class HelpScreen(ModalScreen[None]):
     def compose(self) -> ComposeResult:
         yield Container(
             Static(
-                "recite — keys\n\n"
+                "recite keys\n\n"
                 "  space         play / pause\n"
                 "  j  →  n       next sentence\n"
                 "  k  ←  p       previous sentence\n"
@@ -81,10 +87,13 @@ class ReciteApp(App[str | None]):
     """
 
     BINDINGS = [
-        # Footer-visible: keep terse so it survives narrow windows.
+        # Footer-visible: matches the transport bar the site advertises.
         Binding("space", "play_pause", "play/pause", show=True, priority=True),
         Binding("j,right,n", "next", "next", show=True),
         Binding("k,left,p", "prev", "prev", show=True),
+        Binding("v", "cycle_voice", "voice", show=True),
+        Binding("plus,equals_sign,equal", "faster", "+wpm", show=True),
+        Binding("minus,underscore", "slower", "-wpm", show=True),
         Binding("ctrl+n", "new_text", "new", show=True, priority=True),
         Binding("question_mark", "show_help", "?", show=True, priority=True),
         Binding("q,escape", "quit", "quit", show=True, priority=True),
@@ -92,9 +101,6 @@ class ReciteApp(App[str | None]):
         Binding("r", "replay", "replay", show=False),
         Binding("g,home", "to_start", "start", show=False),
         Binding("G,end", "to_end", "end", show=False),
-        Binding("plus,equals_sign,equal", "faster", "faster", show=False),
-        Binding("minus,underscore", "slower", "slower", show=False),
-        Binding("v", "cycle_voice", "voice", show=False),
         Binding("ctrl+q", "panic_exit", "panic exit", show=False, priority=True),
     ]
 
@@ -138,11 +144,15 @@ class ReciteApp(App[str | None]):
                 self.sentence_widgets.append(w)
                 yield w
         yield Static("", id="status")
-        yield Footer()
+        # The command-palette hint docks on the right and z-orders over the
+        # last footer bindings; at 80 cols that hides `?` and `q quit`. The
+        # palette key still works via App.ENABLE_COMMAND_PALETTE; only the
+        # visible hint is suppressed.
+        yield Footer(show_command_palette=False)
 
     async def on_mount(self) -> None:
         self.title = "recite"
-        self.sub_title = f"{len(self.sentences)} sentences · {self.voice}"
+        self._refresh_subtitle()
         self._mark_widgets()
         self.synth = Synth(self.sentences, self.voice, self.rate, make_aligner(self.align_name))
         self.synth.start(0)
@@ -288,10 +298,16 @@ class ReciteApp(App[str | None]):
         self.notice = ""
         self._refresh_status()
 
-    def _refresh_status(self) -> None:
+    def _build_status_text(self) -> str:
+        """Compose the status line. Pure: no widget access, fully unit-testable.
+
+        Layout matches the site's transport mockup:
+            <state> · <MM:SS / MM:SS> · <idx / total> · voice: X · rate: Y · queue: N synthesised · M pending
+        Time clock is only shown while a sentence is active. Queue counter is
+        only shown when synthesis is still in flight."""
         bits: list[str] = []
         if self.finished:
-            bits.append("○ finished — press space to restart")
+            bits.append("○ finished. Press space to restart")
         elif self.is_paused:
             bits.append("⏸ paused")
         elif self.is_playing:
@@ -300,13 +316,54 @@ class ReciteApp(App[str | None]):
             bits.append("◌ synthesising…")
         else:
             bits.append("○ idle")
+
+        time_clock = self._build_time_clock()
+        if time_clock:
+            bits.append(time_clock)
+
         bits.append(f"{self.current_idx + 1} / {len(self.sentences)}")
         bits.append(f"voice: {self.voices[self.voice_idx]}")
         bits.append("rate: " + (f"{self.rate} wpm" if self.rate > 0 else "default"))
+
+        queue = self._build_queue_indicator()
+        if queue:
+            bits.append(queue)
+
         if self.notice:
             bits.append(self.notice)
+        return " · ".join(bits)
+
+    def _build_time_clock(self) -> str:
+        """Return `MM:SS / MM:SS` for the current track, or empty when not playing."""
+        if not (self.is_playing or self.is_paused):
+            return ""
+        elapsed = self.player.position()
+        total = 0.0
+        if self.synth is not None:
+            track = self.synth.track(self.current_idx)
+            if track is not None:
+                total = track.duration_s
+        return f"{_fmt_mmss(elapsed)} / {_fmt_mmss(total)}"
+
+    def _build_queue_indicator(self) -> str:
+        """Show `queue: N synthesised · M pending` only while pending > 0."""
+        if self.synth is None:
+            return ""
+        synthesised, pending = self.synth.progress()
+        if pending <= 0:
+            return ""
+        return f"queue: {synthesised} synthesised · {pending} pending"
+
+    def _refresh_subtitle(self) -> None:
+        """Format: `<voice> @ <rate> wpm · aligner: <align>`. Matches the site
+        hero title bar `recite · daniel @ 200 wpm · aligner: heuristic`."""
+        voice = self.voices[self.voice_idx].lower() if self.voices else self.voice.lower()
+        rate_label = f"{self.rate} wpm" if self.rate > 0 else "default rate"
+        self.sub_title = f"{voice} @ {rate_label} · aligner: {self.align_name}"
+
+    def _refresh_status(self) -> None:
         try:
-            self.query_one("#status", Static).update(" · ".join(bits))
+            self.query_one("#status", Static).update(self._build_status_text())
         except Exception:
             pass
 
@@ -368,7 +425,13 @@ class ReciteApp(App[str | None]):
 
         The current sentence keeps playing with its existing audio; interrupting
         mid-word would be jarring. New voice/rate applies from cur+1 onward.
+
+        Also refreshes the subtitle here: the subtitle reflects current
+        voice/rate/aligner, and every path that mutates those calls into this
+        method. Keeping the refresh local removes the need for callers to
+        remember to do it themselves.
         """
+        self._refresh_subtitle()
         if not self.synth:
             return
         from_idx = self.current_idx + 1
@@ -406,7 +469,7 @@ class ReciteApp(App[str | None]):
         """Hard exit that bypasses Textual's shutdown sequence.
         Use when the normal `q` quit is wedged (event loop blocked, child
         process stuck, etc.). Best-effort restores the terminal then calls
-        os._exit, so afplay/say children may be orphaned — `pkill -9 afplay`
+        os._exit, so afplay/say children may be orphaned; `pkill -9 afplay`
         afterwards if you still hear audio."""
         try:
             subprocess.run(["stty", "sane"], check=False, timeout=1)
