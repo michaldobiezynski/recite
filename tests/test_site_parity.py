@@ -57,8 +57,9 @@ async def test_status_shows_elapsed_and_total_time_during_playback():
             await pilot.pause()
             status = _status_text(app)
 
-    assert "00:14" in status, f"missing elapsed time: {status!r}"
-    assert "00:38" in status, f"missing total time: {status!r}"
+    assert "00:14 / 00:38" in status, (
+        f"clock must render `MM:SS / MM:SS` literal per the site mockup: {status!r}"
+    )
 
 
 @pytest.mark.asyncio
@@ -98,9 +99,11 @@ async def test_status_shows_queue_when_pending_tracks_remain():
         await pilot.pause()
         status = _status_text(app)
 
-    assert "queue" in status.lower(), f"missing queue indicator: {status!r}"
-    assert "1" in status and "3" in status, (
-        f"expected counts 1 ready / 3 pending in: {status!r}"
+    assert "1 synthesised" in status, (
+        f"expected `1 synthesised` literal in: {status!r}"
+    )
+    assert "3 pending" in status, (
+        f"expected `3 pending` literal in: {status!r}"
     )
 
 
@@ -133,10 +136,18 @@ async def test_subtitle_includes_voice_rate_and_aligner():
     async with app.run_test() as pilot:
         await pilot.pause()
 
-    sub = app.sub_title.lower()
-    assert "daniel" in sub, f"voice missing from subtitle: {app.sub_title!r}"
-    assert "200" in sub, f"rate missing from subtitle: {app.sub_title!r}"
-    assert "heuristic" in sub, f"aligner missing from subtitle: {app.sub_title!r}"
+    # Site hero title bar is `recite · daniel @ 200 wpm · aligner: heuristic`.
+    # Assert the literal separators so a bare-concat regression fails loudly.
+    sub = app.sub_title
+    assert "daniel @ 200 wpm" in sub, (
+        f"subtitle must render `<voice> @ <rate> wpm`: {sub!r}"
+    )
+    assert "aligner: heuristic" in sub, (
+        f"subtitle must render `aligner: <align>`: {sub!r}"
+    )
+    assert " · " in sub, (
+        f"subtitle must use the middle-dot separator from the site: {sub!r}"
+    )
 
 
 @pytest.mark.asyncio
