@@ -75,7 +75,6 @@ class ReciteApp(App[str | None]):
         height: 1fr;
     }
     #status {
-        dock: bottom;
         height: 1;
         padding: 0 2;
         background: $boost;

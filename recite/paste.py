@@ -28,7 +28,6 @@ class PasteApp(App[str | None]):
         background: $surface;
     }
     #hint {
-        dock: top;
         height: 1;
         padding: 0 2;
         color: $text-muted;
