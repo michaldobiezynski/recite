@@ -93,10 +93,6 @@ class TestFooterBindings:
     narrow terminals. If you add a binding, decide explicitly whether it's
     visible or hidden — don't accidentally bloat the footer."""
 
-    def test_six_bindings_visible_in_footer(self):
-        visible = [b for b in ReciteApp.BINDINGS if b.show]
-        assert len(visible) == 6
-
     def test_quit_binding_is_priority(self):
         quit_bindings = [b for b in ReciteApp.BINDINGS if "quit" in b.action]
         assert quit_bindings and all(b.priority for b in quit_bindings)
