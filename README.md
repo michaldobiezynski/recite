@@ -2,6 +2,8 @@
 
 A TUI text-to-speech player for the macOS terminal. Built on `say` and `afplay` with **word-level highlighting**: no API keys, no network, no subscription.
 
+Site: [recite-site.vercel.app](https://recite-site.vercel.app)
+
 Pipe text in, paste from the clipboard, or pass a file. recite splits it into sentences, pre-renders each one to audio, runs alignment to derive word-by-word timings, and plays it back with karaoke-style highlighting and proper transport controls.
 
 ## Install
