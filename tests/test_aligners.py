@@ -84,3 +84,53 @@ class TestMakeAligner:
     def test_unknown_name_raises(self):
         with pytest.raises(ValueError, match="unknown aligner"):
             make_aligner("not-a-real-aligner")
+
+    def test_aeneas_without_install_raises_runtime_error(self):
+        # When the aeneas package is not installed, AeneasAligner.__init__
+        # converts the ImportError into a RuntimeError with an install hint.
+        try:
+            import aeneas  # noqa: F401
+            pytest.skip("aeneas is installed; missing-import path cannot be tested")
+        except ImportError:
+            pass
+        with pytest.raises(RuntimeError, match="aeneas is not installed"):
+            make_aligner("aeneas")
+
+
+class TestHeuristicAlignerAlign:
+    """End-to-end tests for HeuristicAligner.align with audio_duration mocked.
+
+    These pin behaviour that the per-call _weight unit tests alone cannot
+    catch: leading and trailing silence insets, contiguous coverage of the
+    speakable interval, and the empty-input short-circuits.
+    """
+
+    async def test_two_word_sentence_distributes_speakable_duration(self):
+        aligner = HeuristicAligner()
+        with patch("recite.aligners.audio_duration_seconds", return_value=1.0):
+            timings = await aligner.align("hello world", "/fake.aiff")
+
+        assert [t.word for t in timings] == ["hello", "world"]
+        # Leading silence inset on the first word's start.
+        assert timings[0].start_s == pytest.approx(HeuristicAligner.LEADING_SILENCE)
+        # Trailing silence inset before the last word's end.
+        assert timings[-1].end_s == pytest.approx(
+            1.0 - HeuristicAligner.TRAILING_SILENCE
+        )
+        # No gaps between consecutive words.
+        for prev, curr in zip(timings, timings[1:]):
+            assert prev.end_s == pytest.approx(curr.start_s)
+
+    async def test_empty_sentence_returns_no_timings(self):
+        aligner = HeuristicAligner()
+        # Early-return path should not even call audio_duration_seconds.
+        with patch("recite.aligners.audio_duration_seconds") as mock_dur:
+            timings = await aligner.align("", "/fake.aiff")
+        assert timings == []
+        mock_dur.assert_not_called()
+
+    async def test_zero_duration_returns_no_timings(self):
+        aligner = HeuristicAligner()
+        with patch("recite.aligners.audio_duration_seconds", return_value=0.0):
+            timings = await aligner.align("hello world", "/fake.aiff")
+        assert timings == []
