@@ -25,6 +25,7 @@ align = [
 dev = [
     "ruff>=0.5",
     "pytest>=8",
+    "pytest-asyncio>=0.23",
 ]
 
 [project.scripts]
@@ -36,3 +37,7 @@ packages = ["recite"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

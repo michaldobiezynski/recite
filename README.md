@@ -10,7 +10,7 @@ Requires macOS and Python 3.10+. Recommend installing with [pipx](https://pipx.p
 
 ```bash
 brew install pipx
-git clone <this-repo> recite
+git clone https://github.com/michaldobiezynski/recite.git
 cd recite
 make install            # → ~/.local/bin/recite
 ```

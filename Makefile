@@ -48,7 +48,7 @@ test:
 	pytest
 
 lint:
-	ruff check recite/
+	ruff check recite/ tests/
 
 clean:
 	rm -rf build/ dist/ *.egg-info/ .ruff_cache/ .pytest_cache/
