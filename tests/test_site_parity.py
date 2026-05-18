@@ -188,6 +188,28 @@ class TestFooterBindingsParity:
         )
 
 
+@pytest.mark.asyncio
+async def test_footer_renders_quit_at_80_cols():
+    """Counting visible bindings is necessary but not sufficient. Textual's
+    Footer docks the command-palette hint on the right and z-orders it over
+    any binding that would render in the gutter, so the visible binding count
+    can pass while the rightmost labels are silently clipped from the
+    rendered output. 80 cols is Terminal.app's default; that's where the
+    bug first appears."""
+    app = _make_app(["Hello world."])
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        svg = app.export_screenshot()
+
+    assert "quit" in svg, (
+        "the `q quit` binding is missing from the rendered footer at 80 cols; "
+        "the command-palette hint is probably docking over it"
+    )
+    assert "voice" in svg, (
+        "the `v voice` binding is missing from the rendered footer at 80 cols"
+    )
+
+
 # ─── A3: paste screen char / word / duration counters ───────────────────────
 
 def _hint_text(app: PasteApp) -> str:

@@ -144,7 +144,11 @@ class ReciteApp(App[str | None]):
                 self.sentence_widgets.append(w)
                 yield w
         yield Static("", id="status")
-        yield Footer()
+        # The command-palette hint docks on the right and z-orders over the
+        # last footer bindings; at 80 cols that hides `?` and `q quit`. The
+        # palette key still works via App.ENABLE_COMMAND_PALETTE; only the
+        # visible hint is suppressed.
+        yield Footer(show_command_palette=False)
 
     async def on_mount(self) -> None:
         self.title = "recite"
