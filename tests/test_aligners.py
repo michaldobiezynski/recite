@@ -1,6 +1,6 @@
 """Unit tests for the pure-logic parts of the aligners module.
 
-We do not test full alignment end-to-end here — that requires a real audio
+We do not test full alignment end-to-end here; that requires a real audio
 file synthesised by `say` and is better covered by integration tests.
 """
 
@@ -20,7 +20,7 @@ class TestHeuristicAlignerWeight:
         assert HeuristicAligner._weight("hello", 0, 5) == 5.0
 
     def test_trailing_comma_adds_one_point_five(self):
-        # Sentence: "hello," — word is "hello" (0..5), trailing char is ','.
+        # Sentence: "hello,", word is "hello" (0..5), trailing char is ','.
         assert HeuristicAligner._weight("hello,", 0, 5) == 5.0 + 1.5
 
     def test_trailing_semicolon_adds_one_point_five(self):

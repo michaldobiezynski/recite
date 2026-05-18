@@ -62,7 +62,7 @@ class Synth:
         self._cancelled = False
         # Handle to the currently-running `say` subprocess so cancel() can kill
         # it. Shared between the worker thread and the event loop; guard with
-        # a threading.Lock (not asyncio.Lock — the worker can't await).
+        # a threading.Lock (not asyncio.Lock; the worker can't await).
         self._current_proc: subprocess.Popen[bytes] | None = None
         self._proc_lock = threading.Lock()
 

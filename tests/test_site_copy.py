@@ -3,7 +3,7 @@
 The site lives in a sibling repo: recite-site/src/App.jsx. These tests assert
 that the marketing copy doesn't promise things the app can't deliver, and
 that internally-inconsistent mockups have been reconciled. If recite-site is
-not present locally (CI runs the recite repo alone), the tests are skipped —
+not present locally (CI runs the recite repo alone), the tests are skipped;
 the site is a separate deploy target."""
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ def test_no_bare_pipx_install_recite(site_text):
     pattern = re.compile(r"pipx install recite(?!\[?[\w\-/])", re.IGNORECASE)
     matches = pattern.findall(site_text)
     assert not matches, (
-        "found bare `pipx install recite` in App.jsx — this installs the wrong "
+        "found bare `pipx install recite` in App.jsx; this installs the wrong "
         "package. Use `pipx install git+https://github.com/michaldobiezynski/recite.git`."
     )
 
@@ -60,7 +60,7 @@ def test_aeneas_install_uses_git_url(site_text):
 def test_does_not_claim_600_lines(site_text):
     """`wc -l recite/*.py` is ~1300. Either update the figure or omit it."""
     assert "600 lines" not in site_text, (
-        "site says 'roughly 600 lines of Python' but actual is ~1300 — "
+        "site says 'roughly 600 lines of Python' but actual is ~1,400; "
         "either update the figure or drop the line-count claim"
     )
 

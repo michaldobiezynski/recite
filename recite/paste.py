@@ -1,4 +1,4 @@
-"""Paste-text screen — shown when no input source is available, or on --paste.
+"""Paste-text screen, shown when no input source is available, or on --paste.
 
 Runs as a separate App that returns the entered text via `App.exit(value)`.
 The main `ReciteApp` then runs in a second `App.run()` invocation with that
@@ -20,7 +20,7 @@ class PasteApp(App[str | None]):
     """Show a TextArea, return its contents on Ctrl+S / F5, None on Esc.
 
     The hint line below the title reports live `chars · words · ETA` plus a
-    `● ready` indicator once the buffer has content — mirroring the step 03
+    `● ready` indicator once the buffer has content, mirroring the step 03
     mockup on recite-site."""
 
     CSS = """
@@ -82,13 +82,13 @@ class PasteApp(App[str | None]):
         mirroring recite-site's step 03 paste-screen mockup."""
         text = self._current_text()
         if not text.strip():
-            return "paste text below — Ctrl+S or F5 to start, Esc to cancel"
+            return "paste text below. Ctrl+S or F5 to start, Esc to cancel"
         chars = len(text)
         words = len(text.split())
         eta = round(words / ETA_WPM * 60) if words else 0
         return (
             f"{chars} chars · {words} words · ~{eta} sec @ {ETA_WPM} wpm   "
-            f"● ready — Ctrl+S to start, Esc to cancel"
+            f"● ready. Ctrl+S to start, Esc to cancel"
         )
 
     def _refresh_hint(self) -> None:

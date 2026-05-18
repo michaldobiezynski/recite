@@ -2,7 +2,7 @@
 
 help:
 	@echo 'Targets:'
-	@echo '  link           pipx install -e .  — edits to source take effect on next `recite` launch'
+	@echo '  link           pipx install -e .  (edits to source take effect on next `recite` launch)'
 	@echo '  install        pipx install . (uninstall-first; heuristic aligner only)'
 	@echo '  install-align  pipx install ".[align]" (adds aeneas; needs brew install espeak ffmpeg)'
 	@echo '  reinstall      alias for install'
@@ -14,7 +14,7 @@ help:
 	@echo '  clean          remove build artefacts'
 
 # Editable install: pipx links the package back to this source tree. Edits to
-# recite/*.py take effect the next time `recite` is launched — no reinstall
+# recite/*.py take effect the next time `recite` is launched; no reinstall
 # step needed. Uninstall first because pipx 1.12 + uv silently no-ops --force
 # when a venv already exists.
 link:

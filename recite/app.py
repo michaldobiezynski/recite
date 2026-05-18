@@ -46,7 +46,7 @@ class HelpScreen(ModalScreen[None]):
     def compose(self) -> ComposeResult:
         yield Container(
             Static(
-                "recite — keys\n\n"
+                "recite keys\n\n"
                 "  space         play / pause\n"
                 "  j  →  n       next sentence\n"
                 "  k  ←  p       previous sentence\n"
@@ -307,7 +307,7 @@ class ReciteApp(App[str | None]):
         only shown when synthesis is still in flight."""
         bits: list[str] = []
         if self.finished:
-            bits.append("○ finished — press space to restart")
+            bits.append("○ finished. Press space to restart")
         elif self.is_paused:
             bits.append("⏸ paused")
         elif self.is_playing:
@@ -466,7 +466,7 @@ class ReciteApp(App[str | None]):
         """Hard exit that bypasses Textual's shutdown sequence.
         Use when the normal `q` quit is wedged (event loop blocked, child
         process stuck, etc.). Best-effort restores the terminal then calls
-        os._exit, so afplay/say children may be orphaned — `pkill -9 afplay`
+        os._exit, so afplay/say children may be orphaned; `pkill -9 afplay`
         afterwards if you still hear audio."""
         try:
             subprocess.run(["stty", "sane"], check=False, timeout=1)

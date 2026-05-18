@@ -104,7 +104,7 @@ class HeuristicAligner:
     @staticmethod
     def _weight(sentence: str, start: int, end: int) -> float:
         weight = float(end - start)
-        # Bonus for trailing punctuation — natural pauses extend the perceived
+        # Bonus for trailing punctuation: natural pauses extend the perceived
         # word duration in continuous speech.
         if end < len(sentence):
             after = sentence[end]

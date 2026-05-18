@@ -1,8 +1,8 @@
 """Acceptance tests: the running app must match what recite-site claims.
 
 Each test maps to a specific assertion on the marketing site. If a test
-fails, either the app diverged from the site or the site overclaimed —
-fix one of the two, never silence the test."""
+fails, either the app diverged from the site or the site overclaimed.
+Fix one of the two; never silence the test."""
 
 from __future__ import annotations
 
@@ -109,7 +109,7 @@ async def test_status_shows_queue_when_pending_tracks_remain():
 
 @pytest.mark.asyncio
 async def test_status_omits_queue_when_everything_is_ready():
-    """Site doesn't show the queue line when nothing's pending — only surface
+    """Site doesn't show the queue line when nothing's pending; only surface
     it while it conveys useful information."""
     app = _make_app(["s1", "s2"])
     async with app.run_test() as pilot:
@@ -167,9 +167,9 @@ async def test_subtitle_shows_default_when_rate_is_zero():
 # ─── A6: footer must surface voice + rate bindings ──────────────────────────
 
 class TestFooterBindingsParity:
-    """Site hero transport bar always shows `v voice` and `+ − rate` keys.
+    """Site hero transport bar always shows `v voice` and `+ - rate` keys.
     Textual's Footer only renders bindings with show=True, so those bindings
-    must be visible — not hidden behind the `?` help modal."""
+    must be visible, not hidden behind the `?` help modal."""
 
     def test_v_cycle_voice_visible_in_footer(self):
         v_bindings = [b for b in ReciteApp.BINDINGS if b.action == "cycle_voice"]
@@ -262,7 +262,7 @@ async def test_paste_screen_shows_word_count_live():
 
 @pytest.mark.asyncio
 async def test_paste_screen_shows_estimated_duration_at_200_wpm():
-    """Site quotes `~38 sec @ 200 wpm` — the ETA is words / 200 * 60 seconds.
+    """Site quotes `~43 sec @ 200 wpm`; the ETA is words / 200 * 60 seconds.
     With 100 words that's 30 sec; assert the readout is roughly right."""
     app = PasteApp()
     async with app.run_test() as pilot:
