@@ -349,11 +349,10 @@ class ReciteApp(App[str | None]):
         """Show `queue: N synthesised · M pending` only while pending > 0."""
         if self.synth is None:
             return ""
-        ready = sum(1 for t in self.synth._tracks if t.ready)
-        pending = len(self.synth._tracks) - ready
+        synthesised, pending = self.synth.progress()
         if pending <= 0:
             return ""
-        return f"queue: {ready} synthesised · {pending} pending"
+        return f"queue: {synthesised} synthesised · {pending} pending"
 
     def _refresh_subtitle(self) -> None:
         """Format: `<voice> @ <rate> wpm · aligner: <align>`. Matches the site

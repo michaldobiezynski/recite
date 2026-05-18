@@ -75,6 +75,17 @@ class Synth:
             return self._tracks[idx]
         return None
 
+    def progress(self) -> tuple[int, int]:
+        """Return `(synthesised, pending)` track counts for status display.
+
+        Pure read of `track.ready` flags; safe to call from the event loop
+        while the background `_run` task flips flags. CPython makes bool
+        attribute writes atomic, so worst case is a single refresh seeing a
+        flag that flipped a microsecond ago."""
+        synthesised = sum(1 for t in self._tracks if t.ready)
+        pending = len(self._tracks) - synthesised
+        return synthesised, pending
+
     def start(self, from_idx: int = 0) -> None:
         if self._task and not self._task.done():
             self._task.cancel()

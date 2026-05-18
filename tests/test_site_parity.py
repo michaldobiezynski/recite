@@ -90,10 +90,14 @@ async def test_status_shows_queue_when_pending_tracks_remain():
     app = _make_app(["s1", "s2", "s3", "s4"])
     async with app.run_test() as pilot:
         await pilot.pause()
-        # Force track 0 to look ready, the rest pending.
-        for t in app.synth._tracks:
-            t.ready = False
-        app.synth._tracks[0].ready = True
+        # Force track 0 to look ready, the rest pending. Direct flag-write
+        # is fine here because there's no Synth public API to set readiness
+        # from the outside; the production code reads via Synth.progress().
+        assert app.synth is not None
+        for i in range(len(app.sentences)):
+            track = app.synth.track(i)
+            assert track is not None
+            track.ready = (i == 0)
 
         app._refresh_status()
         await pilot.pause()
@@ -114,8 +118,11 @@ async def test_status_omits_queue_when_everything_is_ready():
     app = _make_app(["s1", "s2"])
     async with app.run_test() as pilot:
         await pilot.pause()
-        for t in app.synth._tracks:
-            t.ready = True
+        assert app.synth is not None
+        for i in range(len(app.sentences)):
+            track = app.synth.track(i)
+            assert track is not None
+            track.ready = True
 
         app._refresh_status()
         await pilot.pause()
