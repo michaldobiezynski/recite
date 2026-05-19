@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 from .app import ReciteApp
+from .normalise import reflow_terminal_wraps
 from .splitter import split_sentences
 
 
@@ -60,7 +61,10 @@ def main() -> int:
         sys.stderr.write("recite: `afinfo` not found on PATH; macOS is required.\n")
         return 1
 
-    text = "" if args.paste else _load_input(args.file)
+    # Stdin / file / clipboard text carries the producing terminal's hard
+    # wraps (Claude Code, man, less, piped output). Reflow before splitting
+    # so sentences play whole, matching the behaviour of the paste screen.
+    text = "" if args.paste else reflow_terminal_wraps(_load_input(args.file))
     if not text.strip():
         text = _open_paste_screen()
         if not text:

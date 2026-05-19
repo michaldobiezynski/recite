@@ -11,6 +11,8 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.widgets import Footer, Header, Static, TextArea
 
+from .normalise import reflow_terminal_wraps
+
 # The site's step 03 mockup quotes ETA at 200 wpm; using the same yardstick
 # keeps the paste-screen readout consistent with the marketing copy.
 ETA_WPM = 200
@@ -61,8 +63,8 @@ class PasteApp(App[str | None]):
         self._refresh_hint()
 
     def action_start(self) -> None:
-        text = self.query_one(TextArea).text
-        self.exit(text if text.strip() else None)
+        text = reflow_terminal_wraps(self.query_one(TextArea).text)
+        self.exit(text if text else None)
 
     def action_cancel(self) -> None:
         self.exit(None)
